@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1-to-N</title>
+  <script>
+    function calcSum() {
+      var max = document.getElementById("max").value;
+      var total = 0;
+      for (var i = 1; i <= max; i++) {
+        total += i;
+      }
+      document.getElementById("val").textContent = max;
+      document.getElementById("total").textContent = total;
+    }
+  </script>
+</head>
+<body>
+  <h2>1から<span id="val"></span>の合計は<span id="total"></span></h2>
+  <input type="number" id="max" value="10" />
+  <button onclick="calcSum()">合計</button>
+</body>
+</html>

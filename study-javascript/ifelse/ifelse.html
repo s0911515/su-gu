@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ifelse</title>
+  <script>
+    function check() {{
+      var a = document.getElementById("i0").value;
+      var b = document.getElementById("i1").value;
+      if (a == b) {
+        document.getElementById("result").textContent = "同じ！";
+      } else {
+        document.getElementById("result").textContent = "はずれ";
+      }
+    }}
+  </script>
+  </head>
+<body>
+  <h2>神経衰弱</h2>
+  カード１：<input type="text" id="i0" />
+  カード２：<input type="text" id="i1" />
+  <button onclick="check()">check</button>
+  <p id="result"></p>
+</body>
+</html>

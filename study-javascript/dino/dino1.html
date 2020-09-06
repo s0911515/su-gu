@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dino1</title>
+  <script>
+    function imgClick(dinoName) {
+      var picPath = "./img/pic_" + dinoName + ".jpg";
+      document.getElementById("pic_dino").src=picPath;
+
+      var voiceId = "voice_" + dinoName;
+      document.getElementById(voiceId).play();
+    }
+  </script>
+</head>
+<body>
+  <input type="image" src="./img/pic_tyrannosaurus.jpg" alt="pic_tyrannosaurus" height="100px" onclick="imgClick('tyrannosaurus')">
+  <input type="image" src="./img/pic_triceratops.jpg" alt="pic_triceratops" height="100px" onclick="imgClick('triceratops')">
+  <img id="pic_dino" src="./img/pic_tyrannosaurus.jpg" alt="dino" height="500px">
+  <audio id="voice_tyrannosaurus" preload="auto" src="./music/voice_tyrannosaurus.mp3" type="audio/mp3"></audio>
+  <audio id="voice_triceratops" preload="auto" src="./music/voice_triceratops.mp3" type="audio/mp3"></audio>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BMI</title>
+  <script>
+    function calcBMI() {
+      var a = document.getElementById("i0").value / 100;
+      var b = document.getElementById("i1").value;
+      document.getElementById("result").textContent = b / (a * a);
+    }
+  </script>
+</head>
+<body>
+  <h2>BMI計算機</h2>
+  身長<input type="number" id="i0" value="170">
+  体重<input type="number" id="i1" value="58">
+  <button onclick="calcBMI()">calcBMI</button>
+  <p id="result"></p>
+</body>
+</html>
