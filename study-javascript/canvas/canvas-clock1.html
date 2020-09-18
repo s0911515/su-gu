@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script>
+    
+    var ctx;
+
+    function init() {
+      /** @type {HTMLCanvasElement} */
+      var canvas = document.getElementById("canvas");
+      ctx = canvas.getContext("2d");
+
+      // コンテキストの設定
+      // ctx.strokeStyle = "#FFFFFF";
+      // ctx.fillStyle = "#00FF00"
+      // ctx.lineWidth = 10;
+      // ctx.lineCap = "round";
+      // ctx.shadowColor = "#000000";
+      // ctx.shadowBlur = 20;
+
+      // メモリの描画
+      var div = 60;
+      for (var i = 0; i < div * 2; i++) {
+
+        if (i % 5 == 0) {
+          ctx.lineWidth = 2;
+        } else {
+          ctx.lineWidth = 1;
+        }
+
+        ctx.save();               // 座標系を保存
+
+        var r = Math.PI / div * i;
+        ctx.translate(250, 250);  // 座標系の原点を変更
+        ctx.rotate(r);            // 座標系の角度を変更
+
+        ctx.beginPath();
+        ctx.moveTo(0, -200);
+        ctx.lineTo(0, -170);
+        ctx.stroke();
+
+        ctx.restore();            // 座標系を復元
+      }
+      
+      setInterval(clock, 1000);
+    }
+
+    function clock() {
+
+      // 現在時刻を求める
+      var now = new Date();
+      h = now.getHours() % 12;
+      m = now.getMinutes();
+      s = now.getSeconds();
+      console.log(h + ":" + m + ":" + s);
+
+      // 針を描画する
+      var radH = (Math.PI * 2) / 12 * h + (Math.PI * 2) / 12 * (m / 60);
+      var radM = (Math.PI * 2) / 60 * m;
+      var radS = (Math.PI * 2) / 60 * s;
+
+      // hour
+      ctx.lineWidth = 2;
+      ctx.save();               // 座標系を保存
+      ctx.translate(250, 250);  // 座標系の原点を変更
+      ctx.rotate(radH);         // 座標系の角度を変更
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -120);
+      ctx.stroke();
+      ctx.restore();            // 座標系を復元
+
+      // minute
+      ctx.lineWidth = 3;
+      ctx.save();               // 座標系を保存
+      ctx.translate(250, 250);  // 座標系の原点を変更
+      ctx.rotate(radM);         // 座標系の角度を変更
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -165);
+      ctx.stroke();
+      ctx.restore();            // 座標系を復元
+
+      // second
+      ctx.lineWidth = 1;
+      ctx.save();               // 座標系を保存
+      ctx.translate(250, 250);  // 座標系の原点を変更
+      ctx.rotate(radS);         // 座標系の角度を変更
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -165);
+      ctx.stroke();
+      ctx.restore();            // 座標系を復元
+    }
+  </script>
+</head>
+<body onload="init()">
+  <canvas id="canvas" width="500" height="500"></canvas>
+</body>
+</html>

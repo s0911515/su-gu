@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    td.card {
+      width: 100px;
+      height: 140px;
+      border: 1px solid blue;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 36px;
+      background-color: white;
+      box-shadow: grey 5px 5px;
+    }
+    td.back {
+      background-image: url("card.png");
+      background-size: 100px 140px;
+    }
+  </style>
+  <title>FlipCards</title>
+  <script>
+    "use strict";
+
+    // 配列シャッフル
+    Array.prototype.shuffle = function () {
+      var i = this.length;
+      while (i) {
+        var j = Math.floor(Math.random() * i);
+        var t = this[--i];
+        this[i] = this[j];
+        this[j] = t;
+      }
+      return this;
+    }
+
+    // 広域変数
+    var timer = NaN, score = 0, flipTimer, prevCard, startTime, info;
+  
+    // 初期化関数
+    function init() {
+      var table = document.getElementById("table");
+      info = document.getElementById("info");
+
+      var cards = [];
+      for (var i = 1; i <= 13; i++) {
+        cards.push(i);
+        cards.push(i);
+        cards.push(i);
+        cards.push(i);
+      }
+      cards.shuffle();
+
+      for (var i = 0; i < 4; i++) {
+        var tr = document.createElement("tr");
+        for (var j = 0; j < 13; j++) {
+          var td = document.createElement("td");
+          td.className = "card back";
+          td.number = cards[i * 13 + j];
+          td.onclick = flip;
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+
+      startTime = new Date();
+      timer = setInterval(tick, 1000);
+
+      info.textContent = "Start!"
+    }
+
+    // 経過時間計測用タイマー
+    function tick() {
+      var now = new Date();
+      var elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      document.getElementById("time").textContent = elapsed;
+    }
+
+    // カード裏返し
+    function flip(e) {
+      var src = e.srcElement;
+      
+      // 無効時間またはすでに開かれているカードをクリックした場合は反応しない
+      if (flipTimer || src.textContent != "") {
+        info.textContent = "Error!"
+        return;
+      }
+
+      // カードを裏返す
+      var num = src.number;
+      src.className = "card"
+      src.textContent = num;
+
+      // これが1枚目の場合
+      if (prevCard == null) {
+        prevCard = src;
+        info.textContent = "1st Card Opened"
+        return;
+      }
+
+      // これが2枚目の場合
+      // 数字が一致している場合
+      if (prevCard.number == num) {
+        if (++score == 26) {
+          clearInterval(timer);
+          info.textContent = "Clear!"
+        } else {
+          info.textContent = "Match! Score=" + score;
+        }
+        prevCard = null;
+        clearTimeout(flipTimer);
+
+      //数字が一致していない場合 
+      } else {
+        // 一定時間オープンしてから閉じる
+        flipTimer = setTimeout(function () {
+          src.className = "card back";
+          src.textContent = "";
+          prevCard.className = "card back";
+          prevCard.textContent = "";
+          prevCard = null;
+          flipTimer = NaN;
+          info.textContent = "Next!"
+        }, 1000);
+        info.textContent = "Unmatch!"
+      }
+    }
+
+  </script>
+</head>
+<body onload="init()">
+  <table id="table"></table>
+  <h2>
+    経過時間：<span id="time">0</span>秒
+  </h2>
+  <p id="info"></p>
+</body>
+</html>

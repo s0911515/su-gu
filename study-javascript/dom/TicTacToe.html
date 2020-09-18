@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    #board {
+      background-color: black;
+    }
+    td.cell {
+      background-color: green;
+      width: 30px;
+      height: 30px;
+      text-align: center;
+    }
+  </style>
+  <title>Document</title>
+  <script>
+    var player = "player1";
+    function init() {
+      var b = document.getElementById("board");
+      for (var i = 0; i < 3; i++) {
+        var tr = document.createElement("tr");
+        for (var j = 0; j < 3; j++) {
+          var td = document.createElement("td");
+          td.className = "cell";
+          td.id = "cell" + i + j;
+          td.onclick = clicked;
+          tr.appendChild(td);
+        }
+        b.appendChild(tr);
+      }
+    }
+    function clicked(e) {
+      var cell = document.getElementById(e.target.id);
+      if (cell.textContent == "") {
+        cell.textContent = (player == "player1") ? "○" : "×";
+        player = (player == "player1") ? "player2" : "player1";
+        document.getElementById("player").textContent = player + "の番です";
+      } else {
+        document.getElementById("info").textContent = "unvalied";
+      }
+    }
+  </script>
+</head>
+<body onload="init()">
+  <h2 id="player">player1の番です</h2>
+  <table id="board"></table>
+  <h2 id="info"></h2>
+</body>
+</html>

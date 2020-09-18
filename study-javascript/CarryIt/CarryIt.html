@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarryIt</title>
+  <script>
+    "use strict";
+
+    // 000:通路 001:目的地 010:荷物（通路） 011:荷物（目的地） 110:壁
+    var data = [
+        [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+        [6, 6, 6, 6, 6, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+        [6, 6, 6, 6, 6, 2, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+        [6, 6, 6, 6, 6, 0, 0, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+        [6, 6, 6, 0, 0, 2, 0, 0, 2, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+        [6, 6, 6, 0, 6, 0, 6, 6, 6, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+        [6, 0, 0, 0, 6, 0, 6, 6, 6, 0, 6, 6, 6, 6, 0, 0, 1, 1, 6, 6],
+        [6, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 6, 6],
+        [6, 6, 6, 6, 6, 0, 6, 6, 6, 6, 0, 6, 0, 6, 0, 0, 1, 1, 6, 6],
+        [6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+        [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+    ];
+
+    /** @type {CanvasRenderingContext2D} */
+    var gc;
+    
+    var px = 12, py = 8, info, finish = 0;
+
+    // 初期化関数
+    function init() {
+      /** @type {HTMLCanvasElement} */
+      var canvas = document.getElementById("soko");
+      gc = canvas.getContext("2d");
+      info = document.getElementById("info");
+      info.textContent = "Start!"
+      onkeydown = mykeydown;
+      repaint();
+    }
+
+    function moveUp() { mykeydown({keyCode:38}); }
+    function moveLeft() { mykeydown({keyCode:37}); }
+    function moveRight() { mykeydown({keyCode:39}); }
+    function moveDown() { mykeydown({keyCode:40}); }
+
+    function mykeydown(e) {
+      if (finish) {
+        return;
+      }
+
+      info.textContent = "Error!"
+
+      // 現在位置を取得
+      var dx0 = px, dx1 = px, dy0 = py, dy1 = py;
+
+      // 移動先の座標を2マス先まで取得
+      switch(e.keyCode) {
+        case 37:  // left
+          dx0--; dx1-=2;
+          break;
+        case 38:  // up
+          dy0--; dy1-=2;
+          break;
+        case 39:  // right
+          dx0++; dx1+=2;
+          break;
+        case 40:  // down
+          dy0++; dy1+=2;
+          break;
+      }
+
+      // 進行方向に荷物・壁が存在しない場合
+      if ((data[dy0][dx0] & 0x2) == 0) {
+        // 移動する
+        px = dx0;
+        py = dy0;
+        info.textContent = "Move!"
+      
+      // 進行方向に荷物がある場合
+      } else if ((data[dy0][dx0] & 0x6) == 2) {
+        // 2マス先に荷物・壁が存在しない場合
+        if ((data[dy1][dx1] & 0x2) == 0) {
+          data[dy0][dx0] ^= 2;  // 2ビット目を反転することで1マス先の荷物をクリアしつつもとの状態を保存する
+          data[dy1][dx1] |= 2;  // 2ビット目を1にすることで2マス先に荷物をセットしつつもとの状態を保存する
+          px = dx0;
+          py = dy0;
+          info.textContent = "Push!"
+        }
+      }
+
+      repaint();
+    }
+
+    function repaint() {
+
+      gc.fillStyle = "black";
+      gc.fillRect(0, 0, 800, 440);
+
+      var isClear = 1;
+      
+      for (var y = 0; y < data.length; y++) {
+        for (var x = 0; x < data[y].length; x++) {
+          if (data[y][x] & 0x1) { // 目的地
+            gc.drawImage(imgGoal, x * 40, y * 40, 40, 40);
+          }
+          if ((data[y][x] & 0x6) == 2) { // 荷物
+            gc.drawImage(imgLuggage, x * 40, y * 40, 40, 40);
+          }
+          if (data[y][x] == 6) { // 壁
+            gc.drawImage(imgWall, x * 40, y * 40, 40, 40);
+          }
+          if (data[y][x] == 1) { // 荷物が存在しない目的地
+            isClear = 0;
+          }
+        }
+      }
+
+      gc.drawImage(imgWorker, px * 40, py * 40, 40, 40);
+
+      if (isClear) {
+        info.textContent = "Clear!"
+        finish = 1;
+      }
+
+    }
+
+  </script>
+</head>
+<body onload="init()">
+  <canvas id="soko" width="800", height="440"></canvas>
+  <table>
+    <tr>
+      <td></td>
+      <td><button onclick="moveUp()">U</button></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><button onclick="moveLeft()">L</button></td>
+      <td></td>
+      <td><button onclick="moveRight()">R</button></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><button onclick="moveDown()">D</button></td>
+      <td></td>
+    </tr>
+  </table>
+  <img id="imgWall" src="imgWall.png" style="display: none;">
+  <img id="imgGoal" src="imgGoal.png" style="display: none;">
+  <img id="imgWorker" src="imgWorker.png" style="display: none;">
+  <img id="imgLuggage" src="imgLuggage.png" style="display: none;">
+  <p id="info"></p>
+</body>
+</html>

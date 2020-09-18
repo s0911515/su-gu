@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReversiblePiece</title>
+  <style>
+    #board {
+      background-color: #555555;
+    }
+    td.cell {
+      background-color: #FFB27F;
+      width : 60px;
+      height: 60px;
+      margin: 2px;
+      font-size: 40px;
+      text-align: center;
+    }
+    td.BLACK {
+      color: BLACK;
+    }
+    td.white {
+      color: white;
+    }
+    td.index {
+      color: white;
+      text-align: center;
+    }
+  </style>
+  <script>
+    "use strict";
+
+    var WeightData = [
+      [ 30,-12,  0, -1, -1,  0,-12, 30],
+      [ 12,-15, -3, -3, -3, -3,-15,-12],
+      [  0, -3,  0 ,-1, -1,  0, -3,  0],
+      [ -1, -3, -1, -1, -1, -1, -3, -1],
+      [ -1, -3, -1, -1, -1, -1, -3, -1],
+      [  0, -3,  0 ,-1, -1,  0, -3,  0],
+      [ 12,-15, -3, -3, -3, -3,-15,-12],
+      [ 30,-12,  0, -1, -1,  0,-12, 30],
+    ];
+
+    var BLACK = 1, WHITE = 2;
+    var data = [];
+    var myTurn = false;
+
+    /**
+    * 初期化関数
+    */
+    function init() {
+      var b = document.getElementById("board");
+      var tr0 = document.createElement("tr");
+      for (var i = -1; i < 8; i++) {
+        var td0 = document.createElement("td");
+        if (i != -1) {
+          td0.className = "index";
+          td0.textContent = i;
+        }
+        tr0.appendChild(td0);
+      }
+      b.appendChild(tr0);
+      for (var i = 0; i < 8; i++) {
+        var tr = document.createElement("tr");
+        data[i] = [0, 0, 0, 0, 0, 0, 0, 0];
+        for (var j = -1; j < 8; j++) {
+          var td = document.createElement("td");
+          if (j != -1) {
+            td.className = "cell";
+            td.id = "cell" + i + j;
+            td.onclick = clicked;
+          } else {
+            td.className = "index";
+            td.textContent = i;
+          }
+          tr.appendChild(td);
+        }
+        b.appendChild(tr);
+      }
+      put(3, 3, BLACK);
+      put(4, 4, BLACK);
+      put(3, 4, WHITE);
+      put(4, 3, WHITE);
+      update();
+    }
+
+    function update() {
+      var numWhite = 0, numBLACK = 0;
+      for (var x = 0; x < 8; x++) {
+        for (var y = 0; y < 8; y++) {
+          if (data[x][y] == BLACK) {
+            numBLACK++;
+          }
+          if (data[x][y] == WHITE) {
+            numWhite++;
+          }
+        }
+      }
+      document.getElementById("numBLACK").textContent = numBLACK;
+      document.getElementById("numWhite").textContent = numWhite;
+
+      var BLACKFlip = canFlip(BLACK);
+      var whiteFlip = canFlip(WHITE);
+
+      if (numBLACK + numWhite == 64 || (!BLACKFlip && !whiteFlip)) {
+        showMessage("ゲームオーバー");
+        myTurn = true;
+      } else if (!BLACKFlip) {
+        showMessage("黒スキップ");
+        myTurn = false;
+      } else if (!whiteFlip) {
+        showMessage("白スキップ");
+        myTurn = true;
+      } else {
+        myTurn = !myTurn;
+      }
+
+      if (!myTurn) {
+        setTimeout(think, 1000);
+      }
+    }
+
+    function showMessage(str) {
+      document.getElementById("message").textContent = str;
+      setTimeout(function () {
+        document.getElementById("message").textContent = "";
+      }, 2000);
+    }
+
+    /**
+    * 盤上のセルクリック時のコールバック関数
+    */
+    function clicked(e) {
+      if (!myTurn) {
+        showMessage("COM思考中");
+        return;
+      }
+
+      var id = e.target.id;
+      var i = parseInt(id.charAt(4));
+      var j = parseInt(id.charAt(5));
+
+      var flipped = getFlipCells(i, j, BLACK);
+      if (flipped.length > 0) {
+        for (var k = 0; k < flipped.length; k++) {
+          put(flipped[k][0], flipped[k][1], BLACK);
+        }
+        put(i, j, BLACK);
+        update();
+      } else {
+        showMessage("そのマスには置けません");
+      }
+    }
+
+    /**
+    * (i,j)にcolor色の駒を置く
+    */
+    function put(i, j, color) {
+      var c = document.getElementById("cell" + i + j);
+      c.textContent = "●";
+      c.className = "cell " + (color == BLACK ? "BLACK" : "white");
+      data[i][j] = color;
+    }
+
+    /**
+    * コンピュータ思考関数
+    */
+    function think() {
+
+      // 自分の手番で最もscoreが高い手を選ぶ
+      // var highScore = -1000;
+      // var px = -1, py = -1;
+      // for (var x = 0; x < 8; x++) {
+      //   for (var y = 0; y < 8; y++) {
+      //     var tmpData = copyData();
+      //     var flipped = getFlipCells(x, y, WHITE);
+      //     if (flipped.length) {
+      //       for (var i = 0; i < flipped.length; i++) {
+      //         var p = flipped[i][0];
+      //         var q = flipped[i][1];
+      //         tmpData[p][q] = WHITE;
+      //       }
+      //       tmpData[x][y] = WHITE;
+      //       var score = calcWeightData(tmpData);
+      //       if (score > highScore) {
+      //         highScore = score;
+      //         px = x, py = y;
+      //       }
+      //     }
+      //   }
+      // }
+
+      // if (px >= 0 && py >= 0) {
+      //   var flipped = getFlipCells(px, py, WHITE);
+      //   if (flipped.length > 0) {
+      //     for (var k = 0; k < flipped.length; k++) {
+      //       put(flipped[k][0], flipped[k][1], WHITE);
+      //     }
+      //   }
+      //   put(px, py, WHITE);
+      // } 
+
+      // 自分の手番＋相手の手番（最善手）の組み合わせで最もscoreが高い手を選ぶ
+      console.log("COM思考中...");
+      console.log("COM思考中...");
+      console.log("COM思考中...");
+      var highScore = -1000;
+      var px = -1, py = -1;
+      var xx = -1, yy = -1;
+      var whiteScore = -1000;
+      var blackScore = -1000;
+      for (var x = 0; x < 8; x++) {
+        for (var y = 0; y < 8; y++) {
+          var tmpData = copyData();
+          var flipped = getFlipCells(x, y, WHITE);
+          // (x,y)に駒を置ける場合
+          if (flipped.length) {
+            console.log("　白：x=" + x + ", y=" + y + "について検討");
+
+            // 置いた後の盤面をtmpDataとして作成
+            for (var i = 0; i < flipped.length; i++) {
+              var p = flipped[i][0];
+              var q = flipped[i][1];
+              tmpData[p][q] = WHITE;
+            }
+            tmpData[x][y] = WHITE;
+            console.log("　打牌後の白の評価値=" + calcWeightData2(tmpData, WHITE) + ", 黒の評価値=" + calcWeightData2(tmpData, BLACK));
+            console.log("　打牌後の白の相対評価値=" + (calcWeightData2(tmpData, WHITE) - calcWeightData2(tmpData, BLACK)));
+
+            // 返しの黒の最善手を算出する
+            var highScore2 = -1000;
+            var px2 = -1, py2 = -1;
+            var whiteScore2 = -1000;
+            var blackScore2 = -1000;
+
+            // 総当り
+            for (var x2 = 0; x2 < 8; x2++) {
+              for (var y2 = 0; y2 < 8; y2++) {
+                var tmpData2 = copyData2(tmpData);
+                var flipped2 = getFlipCells2(x2, y2, BLACK, tmpData2);
+
+                // (x2,y2)に駒を置ける場合
+                if (flipped2.length) {
+                  console.log("　　黒：x=" + x2 + ", y=" + y2 + "について検討");
+
+                  // 置いた後の盤面をtmpData2として作成
+                  for (var i2 = 0; i2 < flipped2.length; i2++) {
+                    var p2 = flipped2[i2][0];
+                    var q2 = flipped2[i2][1];
+                    tmpData2[p2][q2] = BLACK;
+                  }
+                  tmpData2[x2][y2] = BLACK;
+                  var tmpWhiteScore = calcWeightData2(tmpData2, WHITE);
+                  var tmpBlackScore = calcWeightData2(tmpData2, BLACK);
+                  console.log("　　打牌後の白の評価値=" + tmpWhiteScore + ", 黒の評価値=" + tmpBlackScore);
+                  console.log("　　打牌後の黒の相対評価値=" + (tmpBlackScore - tmpWhiteScore));
+
+                  // scoreを評価（黒の評価値 - 白の評価値が大きいほどよい）
+                  var score2 = tmpBlackScore - tmpWhiteScore;
+
+                  // ハイスコアを更新した場合、暫定の最善手として保存する
+                  if (score2 > highScore2) {
+                    console.log("　　▼ハイスコア更新▼ highScore=" + highScore2 + ", Score=" + score2);
+                    highScore2 = score2;
+                    px2 = x2, py2 = y2;
+                    whiteScore2 = tmpWhiteScore;
+                    blackScore2 = tmpBlackScore;
+                  }
+                }
+              }
+            }
+            console.log("　白：x=" + x + ", y=" + y + "に対する黒の最善手決定：x=" + px2 + ", y=" + py2 + " 打牌後の黒の相対評価値=" + highScore2);
+
+            // 黒が最善手で置いた場合のscoreを評価する（白の評価値 - 黒の評価値が大きいほどよい）
+            var score = whiteScore2 - blackScore2;
+            console.log("　白：x=" + x + ", y=" + y + "に対し黒が最善手を打牌した場合の白の相対評価値=" + score);
+            if (score > highScore) {
+              console.log("　▼ハイスコア更新▼ highScore=" + highScore + ", Score=" + score);
+              highScore = score;
+              px = x, py = y;
+              xx = px2, yy = py2;
+              whiteScore = whiteScore2;
+              blackScore = blackScore2;
+            } else {
+              console.log("　▼ハイスコア据置▼ highScore=" + highScore + ", Score=" + score);
+            } 
+          }
+        }
+      }
+
+      // (px,py)に保存された白の最善手を打つ
+      if (px >= 0 && py >= 0) {
+        var flipped = getFlipCells(px, py, WHITE);
+        if (flipped.length > 0) {
+          for (var k = 0; k < flipped.length; k++) {
+            put(flipped[k][0], flipped[k][1], WHITE);
+          }
+        }
+        put(px, py, WHITE);
+      } 
+      console.log("▼検討結果▼");
+      console.log("白の最善手決定：x=" + px + ", y=" + py + " 想定される黒の返し手：x=" + xx + ", y=" + yy);
+      console.log("黒打牌後の白の評価値=" + whiteScore + ", 黒の評価値=" + blackScore + ", 白の相対評価値=" + (whiteScore - blackScore));
+      
+      update();
+    }
+
+    /**
+    * 重み付け計算
+    */
+    function calcWeightData(tmpData) {
+      var score = 0;
+      for (var x = 0; x < 8; x++) {
+        for (var y = 0; y < 8; y++) {
+          if (tmpData[x][y] == WHITE) {
+            score += WeightData[x][y];
+          }
+        }
+      }
+      return score;
+    }
+
+    /**
+    * 重み付け計算
+    */
+    function calcWeightData2(tmpData, color) {
+      var score = 0;
+      for (var x = 0; x < 8; x++) {
+        for (var y = 0; y < 8; y++) {
+          if (tmpData[x][y] == color) {
+            score += WeightData[x][y];
+          }
+        }
+      }
+      return score;
+    }
+
+    /**
+    * 駒テーブルデータをコピー
+    */
+    function copyData() {
+      var tmpData = [];
+      for (var x = 0; x < 8; x++) {
+        tmpData[x] = [];
+        for (var y = 0; y < 8; y++) {
+          tmpData[x][y] = data[x][y];
+        }
+      }
+      return tmpData;
+    }
+
+    /**
+    * 引数の駒テーブルデータをコピー
+    */
+    function copyData2(tmpData) {
+      var returnData = [];
+      for (var x = 0; x < 8; x++) {
+        returnData[x] = [];
+        for (var y = 0; y < 8; y++) {
+          returnData[x][y] = tmpData[x][y];
+        }
+      }
+      return returnData;
+    }
+
+    /**
+    * 一つでも挟める駒があるか？（手番スキップ判定用）
+    */
+    function canFlip(color) {
+      for (var x = 0; x < 8; x++) {
+        for (var y = 0; y < 8; y++) {
+          var flipped = getFlipCells(x, y, color);
+          if (flipped.length > 0) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    /**
+    * (i,j)に駒を置いたときに挟める駒の配列を返す
+    */
+    function getFlipCells(i, j, color) {
+
+      // すでに駒がある場合は空
+      if (data[i][j] == BLACK || data[i][j] == WHITE) {
+        return[];
+      }
+
+      // 挟めるかどうかを各方向について調査
+      var dirs = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+      var result = [];
+      for (var p = 0; p < dirs.length; p++) {
+        // flipped:ある方向に対して挟める駒の配列
+        var flipped = getFlipCellsOneDir(i, j, dirs[p][0], dirs[p][1], color);
+
+        // result:全方向に対して挟める駒の配列
+        result = result.concat(flipped);
+      }
+      return result;
+    }
+
+    /**
+    * (i,j)に駒を置いたときに挟める駒の配列を返す
+    */
+    function getFlipCells2(i, j, color, tmpData) {
+
+      // すでに駒がある場合は空
+      if (tmpData[i][j] == BLACK || tmpData[i][j] == WHITE) {
+        return[];
+      }
+
+      // 挟めるかどうかを各方向について調査
+      var dirs = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+      var result = [];
+      for (var p = 0; p < dirs.length; p++) {
+        // flipped:ある方向に対して挟める駒の配列
+        var flipped = getFlipCellsOneDir2(i, j, dirs[p][0], dirs[p][1], color, tmpData);
+
+        // result:全方向に対して挟める駒の配列
+        result = result.concat(flipped);
+      }
+      return result;
+    }
+
+    /**
+    * (i,j)に駒を置いたときに(dx,dy)方向で挟める駒の配列を返す
+    */
+    function getFlipCellsOneDir(i, j, dx, dy, color) {
+      var x = i + dx;
+      var y = j + dy;
+      var flipped = [];
+
+      // 番外、同色、空ならfalse
+      if (x < 0 || y < 0 || x > 7 || y > 7 || data[x][y] == color || data[x][y] == 0) {
+        return [];
+      }
+
+      flipped.push([x,y]);
+
+      while (true) {
+        x += dx;
+        y += dy;
+
+        // 番外、空ならfalse
+        if (x < 0 || y < 0 || x > 7 || y > 7 || data[x][y] == 0) {
+          return [];
+        }
+
+        // 同色なら挟めたためflippedを返す 
+        if (data[x][y] == color) {
+          return flipped;
+        }
+
+        // 異色ならflippedを追加して継続
+        flipped.push([x,y]);
+      }
+    }
+
+    /**
+    * (i,j)に駒を置いたときに(dx,dy)方向で挟める駒の配列を返す
+    */
+    function getFlipCellsOneDir2(i, j, dx, dy, color, tmpData) {
+      var x = i + dx;
+      var y = j + dy;
+      var flipped = [];
+
+      // 番外、同色、空ならfalse
+      if (x < 0 || y < 0 || x > 7 || y > 7 || tmpData[x][y] == color || tmpData[x][y] == 0) {
+        return [];
+      }
+
+      flipped.push([x,y]);
+
+      while (true) {
+        x += dx;
+        y += dy;
+
+        // 番外、空ならfalse
+        if (x < 0 || y < 0 || x > 7 || y > 7 || tmpData[x][y] == 0) {
+          return [];
+        }
+
+        // 同色なら挟めたためflippedを返す 
+        if (tmpData[x][y] == color) {
+          return flipped;
+        }
+
+        // 異色ならflippedを追加して継続
+        flipped.push([x,y]);
+      }
+    }
+
+  </script>
+</head>
+<body onload="init()">
+  <h2>
+    <p>黒（あなた）：<span id="numBLACK"></span>枚</p>
+    <p>白（ＰＣ）　：<span id="numWhite"></span>枚</p>
+  </h2>
+  <table id="board"></table>
+  <h2 id="message"></h2>
+</body>
+</html>

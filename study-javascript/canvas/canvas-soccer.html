@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    canvas {
+      background-color: black;
+    }
+  </style>
+  <title>Document</title>
+  <script>
+    
+    var ctx;
+    function init() {
+      /** @type {HTMLCanvasElement} */
+      var canvas = document.getElementById("canvas");
+      ctx = canvas.getContext("2d");
+
+      // コンテキストの設定
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.fillStyle = "#00FF00"
+      ctx.lineWidth = 10;
+      // ctx.lineCap = "round";
+      // ctx.shadowColor = "#000000";
+      // ctx.shadowBlur = 20;
+
+      // 線を引く
+      ctx.beginPath();
+      ctx.moveTo(0, 200);
+      ctx.lineTo(50, 200);
+      ctx.lineTo(50, 300);
+      ctx.lineTo(0, 300);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(1000, 200);
+      ctx.lineTo(950, 200);
+      ctx.lineTo(950, 300);
+      ctx.lineTo(1000, 300);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(500, 0);
+      ctx.lineTo(500, 500);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(500, 250, 50, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.stroke();
+      
+    }
+  </script>
+</head>
+<body onload="init()">
+  <canvas id="canvas" width="1000" height="500"></canvas>
+</body>
+</html>
